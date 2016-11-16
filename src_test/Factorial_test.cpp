@@ -15,3 +15,5 @@ TEST_CASE( "64-bit Test - Sign Extension", "[64-bit]" ) {
     long n = foo(i+k);
     REQUIRE( n == -1 );
 }
+
+
