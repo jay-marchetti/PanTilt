@@ -8,6 +8,8 @@
 
 #include <iostream>
 using namespace std;
+using namespace exploringBB;
+
 
 int main() {
 	cout << "October 24 - Happy bday Margie!" << endl; // prints October Hello from the SEI BeagleBone Black board!
