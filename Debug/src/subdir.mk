@@ -24,4 +24,11 @@ src/%.o: ../src/%.cpp
 	@echo 'Finished building: $<'
 	@echo ' '
 
+src/PanTilt.o: ../src/PanTilt.cpp
+	@echo 'Building file: $<'
+	@echo 'Invoking: Cross G++ Compiler'
+	arm-linux-gnueabihf-g++ -I/home/jaym/workspace/PanTilt/src/molloy -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"src/PanTilt.d" -o "$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+
 
