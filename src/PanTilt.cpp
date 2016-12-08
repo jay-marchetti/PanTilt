@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <pthread.h>
+#include <unistd.h>
 #include "GPIO.h"
 #include "PWM.h"      //placed in the current directory for ease of use
 
@@ -20,7 +22,30 @@ using namespace exploringBB;
 using namespace std;
 
 void ShowUsage(char *s);
-
+void* threadFunc1(void* arg)
+{
+	while (1)
+	{
+		int i = 1000;		// 1 second thread
+		while (i-- > 0)
+		{
+			usleep(1000);	// sleep for 1 millisec
+		}
+    	cout << "1 second thread" << endl;
+	}
+}
+void* threadFunc2(void *arg)
+{
+	while (1)
+	{
+		int i = 3000;		// 3 second thread
+		while (i-- > 0)
+		{
+			usleep(1000);	// sleep for 1 millisec
+		}
+    	cout << "3 second thread" << endl;
+	}
+}
 
 int main(int argc, char* argv[]) {
 	int n, ax = 1;
@@ -34,6 +59,7 @@ int main(int argc, char* argv[]) {
 	float Freq = 0.2;
 	float Phase = 0.0;
 	int Cycles = 1;
+	pthread_t thread1, thread2;
 
 	unsigned int del, sec = 1000000; //microseconds to sleep
 	PWM pwm2("pwm_test_P9_22.15");
@@ -47,7 +73,7 @@ int main(int argc, char* argv[]) {
 	PWM* pwm;
 	pwm = &pwm1;
 
-	while ((n = getopt(argc,argv,"ha:d:rvA:F:P:N:tR")) != -1)
+	while ((n = getopt(argc,argv,"ha:d:rvA:F:P:N:tRT")) != -1)
 	  {
 	    switch (n)
 	    {
@@ -97,6 +123,23 @@ int main(int argc, char* argv[]) {
 	    	break;
 	      case 'R': // Range test
 	    	bRangeTest = true;
+	    	break;
+	      case 'T': // Simple POSIX thread test
+	    	if (pthread_create(&thread1, NULL, &threadFunc1, NULL))
+	    	{
+	    		cout << "Failed to create thread1" << endl;
+	    		exit (1);
+	    	}
+	    	if (pthread_create(&thread2, NULL, &threadFunc2, NULL))
+	    	{
+	    		cout << "Failed to create thread2" << endl;
+	    		exit (1);
+	    	}
+	    	for (int i=0; i<16; i++)
+	    	{
+	    		usleep(1000000);	// 1 sec delay
+	    	}
+	    	exit (0);
 	    	break;
 	      default:
 	    	break;
@@ -166,6 +209,7 @@ void ShowUsage(char *s)
 	  cout<<"         "<<"-N  specify Number of sine cycles to complete [1, n]"<<endl;
 	  cout<<"         "<<"-t  Trigger (commence) sine test mode motion"<<endl;
 	  cout<<"         "<<"-R  commence Range test mode for an axis"<<endl;
+	  cout<<"         "<<"-T  run simple POSIX Thread test"<<endl;
 	  cout<<"example1: sudo "<<s<<" -a1 -d850"<<endl;
 	  cout<<"example2: sudo "<<s<<" -a2 -r"<<endl;
 	  cout<<"example3: sudo "<<s<<" -a2 -A400.0 -N3 -t"<<endl;
