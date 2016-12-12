@@ -22,30 +22,8 @@ using namespace exploringBB;
 using namespace std;
 
 void ShowUsage(char *s);
-void* threadFunc1(void* arg)
-{
-	while (1)
-	{
-		int i = 1000;		// 1 second thread
-		while (i-- > 0)
-		{
-			usleep(1000);	// sleep for 1 millisec
-		}
-    	cout << "1 second thread" << endl;
-	}
-}
-void* threadFunc2(void *arg)
-{
-	while (1)
-	{
-		int i = 3000;		// 3 second thread
-		while (i-- > 0)
-		{
-			usleep(1000);	// sleep for 1 millisec
-		}
-    	cout << "3 second thread" << endl;
-	}
-}
+void* threadFunc1(void* arg);
+void* threadFunc2(void *arg);
 
 int main(int argc, char* argv[]) {
 	int n, ax = 1;
@@ -216,3 +194,30 @@ void ShowUsage(char *s)
 	  cout<<"example4: sudo "<<s<<" -a1 -R"<<endl;
 	  cout<<"example5: sudo "<<s<<" -h"<<endl;
 }
+
+void* threadFunc1(void* arg)
+{
+	while (1)
+	{
+		int i = 1000;		// 1 second thread
+		while (i-- > 0)
+		{
+			usleep(1000);	// sleep for 1 millisec
+		}
+    	cout << "1 second thread" << endl;
+	}
+}
+
+void* threadFunc2(void *arg)
+{
+	while (1)
+	{
+		int i = 3000;		// 3 second thread
+		while (i-- > 0)
+		{
+			usleep(1000);	// sleep for 1 millisec
+		}
+    	cout << "3 second thread" << endl;
+	}
+}
+
