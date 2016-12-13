@@ -4,14 +4,17 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../src/Axis.cpp \
 ../src/Factorial.cpp \
 ../src/PanTilt.cpp 
 
 OBJS += \
+./src/Axis.o \
 ./src/Factorial.o \
 ./src/PanTilt.o 
 
 CPP_DEPS += \
+./src/Axis.d \
 ./src/Factorial.d \
 ./src/PanTilt.d 
 

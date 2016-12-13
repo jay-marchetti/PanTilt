@@ -21,10 +21,7 @@ public:
 
 private:
 	string Name;				// Name of the axis
-	bool   IsLimitedRotation;	// Whether axis is freely rotational or limited rotation
 	string PinDescriptor;		// BBB pin descriptor e.g. pwm_test_P9_22.15
-	float  MinAngleDegrees;		// Minimum allowable angle (degrees) if limited rotation
-	float  MaxAngleDegrees;		// Maximum allowable angle (degrees) if limited rotation
 	float  Position;			// Current position in degrees
 	float  SineAmplitude;       // Peak amplitude of sine motion in degrees (e.g. 5.0)
 	float  SineFrequencyHz;		// Frequency of sine motion in Hz (e.g. 0.1)
@@ -32,12 +29,16 @@ private:
 	int    SineNumberOfCycles;	// Number of sine motion cycles to execute (e.g. 8)
 	float  SinePercentComplete;	// Readout of percent done in [0.0, 100.0] for sine motion
 	bool   SineMotionTrigger;   // Value to start / stop (on write) or query for active (read) sine motion
+	pthread_t SineThread;		// Thread for driving sinusoidal axis motion
+	int    testvar;
 
 // Methods
 public:
-	// Constructor
-	Axis   (string name, bool isLimitedRotation, string pinDescriptor, float min, float max);
-	// Initializes PWM channels and places axis to known (midpoint) position
+	// Constructors
+	Axis   ();
+	Axis   (string name, string pinDescriptor);
+	Axis   (string name, string descriptor, int t);
+	// Initializes PWM channel and places axis to known (0.00 degree) position
 	int    Initialize ();
 	// Commands the axis to move to a position
 	int    setPosition (float positionDegrees);
@@ -51,6 +52,8 @@ public:
 	int    setSineMotionTrigger (bool activate);
 	// Returns whether sinusoidal motion is currently active. Clears upon completion.
 	bool   getSineMotionTrigger ();
+	void   sinethread (void);
+	static void * thread_helper (void * context);
 	// Destructor
 	~Axis  ();
 
