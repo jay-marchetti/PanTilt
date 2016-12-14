@@ -11,6 +11,9 @@
 #define AXIS_HPP_
 
 #include<string>
+#include "GPIO.h"
+#include "PWM.h"
+
 using std::string;
 
 namespace exploringBB {
@@ -22,6 +25,7 @@ public:
 private:
 	string Name;				// Name of the axis
 	string PinDescriptor;		// BBB pin descriptor e.g. pwm_test_P9_22.15
+	unsigned ZeroPos;			// Axis zero (0.00) degree position in PWM microsecs
 	float  Position;			// Current position in degrees
 	float  SineAmplitude;       // Peak amplitude of sine motion in degrees (e.g. 5.0)
 	float  SineFrequencyHz;		// Frequency of sine motion in Hz (e.g. 0.1)
@@ -30,20 +34,25 @@ private:
 	float  SinePercentComplete;	// Readout of percent done in [0.0, 100.0] for sine motion
 	bool   SineMotionTrigger;   // Value to start / stop (on write) or query for active (read) sine motion
 	pthread_t SineThread;		// Thread for driving sinusoidal axis motion
-	int    testvar;
+	PWM*   pwm;					// PWM output for this axis
 
 // Methods
 public:
 	// Constructors
 	Axis   ();
 	Axis   (string name, string pinDescriptor);
-	Axis   (string name, string descriptor, int t);
-	// Initializes PWM channel and places axis to known (0.00 degree) position
+	Axis   (string name, string descriptor, int zeroPositionPwm);
+	// Initializes PWM channel and axis thread - call once before any other method
 	int    Initialize ();
-	// Commands the axis to move to a position
+	// Re-zeroes the axis 0.00 degree position at the current position (non-persistently)
+	void   Rezero ();
+	// Statically position the axis
+	void   Zero (void);
 	int    setPosition (float positionDegrees);
-	// Returns the current (commanded) position in degrees
+	int    setDuty (unsigned microsecs);
+	// Returns the current axis position
 	float  getPostion ();
+	unsigned getDuty ();
 	// Sets the sinusoidal motion parameters if sine motion is currently inactive
 	int    setSineMotion (float ampl, float freq, float phas, int cycles);
 	// Returns the percent complete of sinusoidal motion over all commanded cycles
