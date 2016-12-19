@@ -39,6 +39,10 @@ int Axis::Initialize(void)
 	pwm->setDutyCycle(ZeroPos * 1000u);		// set initial position to 0.00 degrees
 	pwm->run();                     		// start the PWM output
 	MicrosecPerDeg = 8.5;					// Set axis scale factor
+	Period = 10.0;
+	Cycles = 1;
+	Ampl = 30.0;
+	// Create thread for this axis used for sine & step modes
 	pthread_create(&SineThread, NULL, Axis::thread_helper, this);
 	return 1;
 }
@@ -72,8 +76,46 @@ unsigned Axis::getDuty()
 
 void Axis::sinethread(void)
 {
+	const float PI = 3.1415927;
+	const float TWO_PI = 2.0 * PI;
+	int DCduty, ACduty, cycles;
+	float ang, inc;
+
 	while (1)
 	{
+		if (bTrig == true)
+		{
+			if (bufTrig == false) // If just entering sine motion
+			{
+				DCduty = pwm->getDutyCycle(); // Save current axis DC position
+				cycles = Cycles;
+				ang = 0.0;
+				inc = 1.0 / (50.0 * Period);
+				bufTrig = true;
+			}
+			else
+			{
+				if (cycles > 0)
+				{
+					ACduty = Ampl * MicrosecPerDeg * sin(ang * TWO_PI) * 1000.0;
+					ang += inc;
+					if (ang > 1.0)
+					{
+						ang = 0.0;
+						cycles--;
+					}
+					pwm->setDutyCycle((unsigned)(DCduty + ACduty));
+				}
+				else
+				{
+					bTrig = false;
+				}
+			}
+		}
+		else
+		{
+			bufTrig = false;
+		}
 		usleep(20000);		// 20 millisec (50Hz) timing thread
 	}
 }

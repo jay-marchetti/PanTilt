@@ -99,6 +99,21 @@ int main(int argc, char* argv[]) {
 	    {
 	    	cout << Ax << endl;
 	    }
+	    else if (x[0] == "pos")
+	    {
+	    	float p = strtod(x[1].c_str(), NULL);
+	    	int k = (int) (p * axis[Ax]->MicrosecPerDeg);
+	    	unsigned u = axis[Ax]->ZeroPos + k;
+	    	axis[Ax]->setDuty(u);
+	    }
+	    else if (x[0] == "pos?")
+	    {
+	    	unsigned u = axis[Ax]->getDuty();
+	    	int k = u - axis[Ax]->ZeroPos;
+	    	float p = k / axis[Ax]->MicrosecPerDeg;
+	    	cout << p << endl;
+	    }
+
 	    else if ((x[0] == "duty") && (args == 2))
 	    {
 	    	unsigned k = strtol(x[1].c_str(), NULL, 0);
@@ -116,6 +131,33 @@ int main(int argc, char* argv[]) {
 	    {
 	    	axis[Ax]->Rezero();
 	    }
+	    else if (x[0] == "trig")
+	    {
+	    	int k = strtol(x[1].c_str(), NULL, 0);
+	    	axis[Ax]->bTrig = (k != 0) ? true : false;
+	    }
+	    else if (x[0] == "trigall")
+	    {
+	    	int k = strtol(x[1].c_str(), NULL, 0);
+	    	axis[1]->bTrig = (k != 0) ? true : false;
+	    	axis[2]->bTrig = (k != 0) ? true : false;
+	    }
+	    else if (x[0] == "cycles")
+	    {
+	    	int k = strtol(x[1].c_str(), NULL, 0);
+	    	axis[Ax]->Cycles = k;
+	    }
+	    else if (x[0] == "ampl")
+	    {
+	    	float a = strtod(x[1].c_str(), NULL);
+	    	axis[Ax]->Ampl = a;
+	    }
+	    else if (x[0] == "period")
+	    {
+	    	float p = strtod(x[1].c_str(), NULL);
+	    	axis[Ax]->Period = p;
+	    }
+
 	    else if (x[0] == "help")
 	    {
 	        ShowUsage(argv[0]);

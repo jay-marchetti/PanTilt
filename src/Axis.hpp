@@ -21,19 +21,22 @@ namespace exploringBB {
 class Axis {
 // Member variables
 public:
+	bool   bTrig;   			// Value to start / stop (on write) or query for active (read) sine motion
+	bool   bufTrig;
+	int    Cycles;
+	float  Ampl;       			// Peak amplitude of sine motion in degrees (e.g. 5.0)
+	float  Period;				// Sine period in seconds
+	float  MicrosecPerDeg;		// Scale factor for translation of degrees to microsec duty cycle
+	unsigned ZeroPos;			// Axis zero (0.00) degree position in PWM microsecs
 
 private:
 	string Name;				// Name of the axis
 	string PinDescriptor;		// BBB pin descriptor e.g. pwm_test_P9_22.15
-	unsigned ZeroPos;			// Axis zero (0.00) degree position in PWM microsecs
-	float  MicrosecPerDeg;		// Scale factor for translation of degrees to microsec duty cycle
 	float  Position;			// Current position in degrees
-	float  SineAmplitude;       // Peak amplitude of sine motion in degrees (e.g. 5.0)
 	float  SineFrequencyHz;		// Frequency of sine motion in Hz (e.g. 0.1)
 	float  SinePhaseDegrees;	// Phase in [0.0, 360.0] of sine motion in degrees (e.g. 90.0)
 	int    SineNumberOfCycles;	// Number of sine motion cycles to execute (e.g. 8)
 	float  SinePercentComplete;	// Readout of percent done in [0.0, 100.0] for sine motion
-	bool   SineMotionTrigger;   // Value to start / stop (on write) or query for active (read) sine motion
 	pthread_t SineThread;		// Thread for driving sinusoidal axis motion
 	PWM*   pwm;					// PWM output for this axis
 
