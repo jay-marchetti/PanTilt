@@ -26,6 +26,7 @@ private:
 	string Name;				// Name of the axis
 	string PinDescriptor;		// BBB pin descriptor e.g. pwm_test_P9_22.15
 	unsigned ZeroPos;			// Axis zero (0.00) degree position in PWM microsecs
+	float  MicrosecPerDeg;		// Scale factor for translation of degrees to microsec duty cycle
 	float  Position;			// Current position in degrees
 	float  SineAmplitude;       // Peak amplitude of sine motion in degrees (e.g. 5.0)
 	float  SineFrequencyHz;		// Frequency of sine motion in Hz (e.g. 0.1)

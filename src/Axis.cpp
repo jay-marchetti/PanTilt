@@ -36,7 +36,9 @@ int Axis::Initialize(void)
 {
 	pwm->setPeriod(20000000u);				// Set the period at 20 msec, i.e. 50Hz
 	pwm->setPolarity(PWM::ACTIVE_HIGH);		// using active high PWM
+	pwm->setDutyCycle(ZeroPos * 1000u);		// set initial position to 0.00 degrees
 	pwm->run();                     		// start the PWM output
+	MicrosecPerDeg = 8.5;					// Set axis scale factor
 	pthread_create(&SineThread, NULL, Axis::thread_helper, this);
 	return 1;
 }
@@ -72,7 +74,7 @@ void Axis::sinethread(void)
 {
 	while (1)
 	{
-		usleep(10000);		// 10 millisec (100Hz) timing thread
+		usleep(20000);		// 20 millisec (50Hz) timing thread
 	}
 }
 
