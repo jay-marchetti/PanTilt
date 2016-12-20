@@ -1,9 +1,10 @@
 //============================================================================
 // Name        : PanTilt.cpp
 // Author      : Jay Marchetti
-// Version     :
-// Copyright   : SEI
-// Description : Hello World in C++, Ansi-style
+// Date        : Dec 20, 2016
+// Version     : 1.50
+// Copyright   : SEI, Carnegie Mellon University
+// Description : PanTilt application for BeagleBone Black driving 2-axis mount
 //============================================================================
 
 #include <iostream>
@@ -36,25 +37,19 @@ using namespace std;
 
 Axis* axis[3];
 void  ShowUsage(char *s);
+string ModeString[] =
+{
+		"sin",
+		"cos",
+		"range"
+};
 
 int main(int argc, char* argv[]) {
-	int n, ax = 1;
-	unsigned duty;
-	string version = "v1.30";
+	string version = "v1.50";
 	bool bDone = false;
 	string cmd;
 	unsigned Ax;
 	int args;
-
-	bool bGoPos = false;
-	bool bSineTest = false;
-	bool bRangeTest = false;
-	unsigned int dc, per;
-	float Amp = 100.0;
-	float Freq = 0.2;
-	float Phase = 0.0;
-	int Cycles = 1;
-	pthread_t thread1, thread2;
 
 //	cout << mything.getname() << endl;
 //	th[0] = new Thing("Kate", 1);
@@ -67,8 +62,6 @@ int main(int argc, char* argv[]) {
 	axis[1]->Initialize();
 	axis[2]->Initialize();
 	Ax = 1;		// Set the current working axis to 1
-
-	unsigned int del, sec = 1000000; //microseconds to sleep
 
 	while (bDone == false)
 	{
@@ -147,17 +140,51 @@ int main(int argc, char* argv[]) {
 	    	int k = strtol(x[1].c_str(), NULL, 0);
 	    	axis[Ax]->Cycles = k;
 	    }
-	    else if (x[0] == "ampl")
+	    else if (x[0] == "cycles?")
+	    {
+	    	cout << axis[Ax]->Cycles << endl;
+	    }
+	    else if (x[0] == "amp")
 	    {
 	    	float a = strtod(x[1].c_str(), NULL);
 	    	axis[Ax]->Ampl = a;
+	    }
+	    else if (x[0] == "amp?")
+	    {
+	    	cout << axis[Ax]->Ampl << endl;
 	    }
 	    else if (x[0] == "period")
 	    {
 	    	float p = strtod(x[1].c_str(), NULL);
 	    	axis[Ax]->Period = p;
 	    }
-
+	    else if (x[0] == "period?")
+	    {
+	    	cout << axis[Ax]->Period << endl;
+	    }
+	    else if (x[0] == "mode")
+	    {
+	    	if (x[1] == "sin")
+	    	{
+	    		axis[Ax]->Mode = SIN;
+	    	}
+	    	else if (x[1] == "cos")
+	    	{
+	    		axis[Ax]->Mode = COS;
+	    	}
+	    	else
+	    	{
+	    		axis[Ax]->Mode = RANGE;
+	    	}
+	    }
+	    else if (x[0] == "mode?")
+	    {
+	    	cout << ModeString[axis[Ax]->Mode] << endl;
+	    }
+	    else if (x[0] == "ver?")
+	    {
+	    	cout << version << endl;
+	    }
 	    else if (x[0] == "help")
 	    {
 	        ShowUsage(argv[0]);
@@ -172,25 +199,36 @@ int main(int argc, char* argv[]) {
 
 void ShowUsage(char *s)
 {
-	cout<<"Usage:   sudo "<< s <<"   Where valid commands are:" << endl;
+	cout<<"Usage:      sudo "<< s <<"   Where valid commands are:" << endl;
 	cout<<"Command <space> <argument> "<<endl;
-	cout<<"help      Show (this) help information"<<endl;
-	cout<<"axis <n>  Specify axis number [1 or 2]. Retained until changed"<<endl;
-	cout<<"axis?     Read present axis number [1 or 2]"<<endl;
-	cout<<"duty <n>  Statically position axis to duty cycle in microsec [400, 1200]"<<endl;
-	cout<<"duty?     Read present Axis position as duty cycle in microsec [400, 1200]"<<endl;
-	cout<<"zero      Statically position axis at its zero position"<<endl;
-	cout<<"rezero    Redefine axis zero position to present position"<<endl;
-	cout<<"-A  specify Amplitude of sine motion in duty cycle microsecs [100, 500]"<<endl;
-	cout<<"-N  specify Number of sine cycles to complete [1, n]"<<endl;
-	cout<<"-t  Trigger (commence) sine test mode motion"<<endl;
-	cout<<"-R  commence Range test mode for an axis"<<endl;
-	cout<<"-T  run simple POSIX Thread test"<<endl;
-	cout<<"example1: sudo "<<s<<" -a1 -d850"<<endl;
-	cout<<"example2: sudo "<<s<<" -a2 -r"<<endl;
-	cout<<"example3: sudo "<<s<<" -a2 -A400.0 -N3 -t"<<endl;
-	cout<<"example4: sudo "<<s<<" -a1 -R"<<endl;
-	cout<<"example5: sudo "<<s<<" -h"<<endl;
+	cout<<"help        Show (this) help information"<<endl;
+	cout<<"quit        Exit the program"<<endl;
+	cout<<"axis <n>    Specify axis number [1 or 2]. Retained until changed"<<endl;
+	cout<<"axis?       Read present axis number"<<endl;
+	cout<<"pos <f>     Statically position axis at a position in degrees [-40.0, 40.0]"<<endl;
+	cout<<"pos?        Read present axis position in degrees"<<endl;
+	cout<<"zero        Statically position the axis at zero degrees position"<<endl;
+	cout<<"amp <f>     Specify sinusoidal motion peak amplitude in degrees [-40.0, 40.0]"<<endl;
+	cout<<"amp?        Read present sinusoidal motion peak amplitude in degrees"<<endl;
+	cout<<"period <f>  Specify sinusoidal motion period in seconds [1.0, 300.0]"<<endl;
+	cout<<"period?     Read present sinusoidal motion period in seconds"<<endl;
+	cout<<"cycles <n>  Specify sinusoidal motion number of cycles to complete [1, 100]"<<endl;
+	cout<<"cycles?     Read present sinusoidal motion number of cycles to complete"<<endl;
+	cout<<"mode <s>    Specify sinusoidal or range motion type [sin, cos, range]"<<endl;
+	cout<<"mode?       Read present sinusoidal or range motion type"<<endl;
+	cout<<"rezero      Redefine axis zero position to be the present position"<<endl;
+	cout<<"duty <n>    Statically position axis at a position in duty cycle microsecs [400, 1200]"<<endl;
+	cout<<"duty?       Read present axis position in duty cycle microsecs"<<endl;
+	cout<<"trig <n>    Trigger axis to cease (0) or commence (1) motion per the mode [0, 1]"<<endl;
+	cout<<"trigall <n> Trigger both axes to cease (0) or commence (1) motion per their mode [0, 1]"<<endl;
+	cout<<"ver?        Read the version of this program"<<endl;
+	cout<<"Example commands:"<<endl;
+	cout<<">>axis 1"<<endl;
+	cout<<">>pos?"<<endl;
+	cout<<">>25.342"<<endl;
+	cout<<">>pos 10.0"<<endl;
+	cout<<">>mode sin"<<endl;
+	cout<<">>trig 1"<<endl;
 }
 
 vector<string> split(const string &s, char delim)
@@ -203,145 +241,5 @@ vector<string> split(const string &s, char delim)
     }
     return tokens;
 }
-
-
-#if 0
-int Oldmain(int argc, char* argv[]) {
-	int n, ax = 1;
-	unsigned duty;
-	string version = "v1.30";
-	bool bDone = false;
-	bool bGoPos = false;
-	bool bSineTest = false;
-	bool bRangeTest = false;
-	unsigned int dc, per;
-	float Amp = 100.0;
-	float Freq = 0.2;
-	float Phase = 0.0;
-	int Cycles = 1;
-	pthread_t thread1, thread2;
-
-	unsigned int del, sec = 1000000; //microseconds to sleep
-
-	while (bDone == false)
-	  {
-
-
-
-
-	    switch (n)
-	    {
-	      /*option h show the help infomation*/
-	      case 'h':
-	        ShowUsage(argv[0]);
-	        exit(1);
-	        break;
-	      case 'a':
-	        ax = atoi(optarg);
-	    	switch (ax)
-	    	{
-	        	case 1: pwm = &pwm1; break;
-	    		case 2: pwm = &pwm2; break;
-	    		default: exit(1);
-	    	}
-	        break;
-	      case 'd': // Duty cycle positioning	    	  if (pthread_create(&thread1, NULL, &threadFunc1, NULL))
-	    	for (int i=0; i<16; i++)
-	    	{
-	    		usleep(1000000);	// 1 sec delay
-	    	}
-	    	exit (0);
-
-	    	duty = (unsigned)atoi(optarg);
-	    	bGoPos = true;
-	    	break;
-	      case 'r': // Read current position
-	    	dc = pwm->getDutyCycle();
-	    	per = pwm->getPeriod();
-	    	cout << "Duty cycle = " << dc << endl;
-	    	cout << "Period = " << per << endl;
-		    exit(0);
-		    break;
-	      case 'v':
-	    	cout << argv[0] << " version: " << version << endl;
-	    	exit(0);
-	    	break;
-	      case 'A':
-	    	Amp = atof(optarg);
-	    	break;
-	      case 'F':
-	    	Freq = atof(optarg);
-	    	break;
-	      case 'P':
-	    	Phase = atof(optarg);
-	    	break;
-	      case 'N':
-	    	Cycles = atoi(optarg);
-	    	break;
-	      case 't': // Trigger Sine test
-	    	bSineTest = true;
-	    	break;
-	      case 'R': // Range test
-	    	bRangeTest = true;
-	    	break;
-	      case 'T': // Simple POSIX thread test
-	    	break;
-	      default:
-	    	break;
-	    }
-	}
-
-	if (bGoPos == true) // If just go to static position
-	{
-		pwm->setDutyCycle(unsigned(duty * 1000));
-		cout << "Axis " << ax << " at duty = " << duty << " microsec" << endl;
-		exit(0);
-	}
-	if (bSineTest == true) // If base-level scorsby test mode
-	{
-		cout << "Sine Test" << endl;
-		const float PI = 3.1415927;
-		const float TWO_PI = 2.0 * PI;
-		del = 25000;
-		int DCduty = pwm->getDutyCycle(); // Save current axis DC position
-		for (int i=0; i<Cycles; i++)
-		{
-			cout << "cycle #"<< i+1 << endl;
-			for (float x=0.0; x<1.0; x+=0.0025) // Simple fixed frequency and phase sine test
-			{
-				int ACduty = Amp * sin(x * TWO_PI) * 1000.0;
-				//cout << DCduty + ACduty << endl;
-				pwm->setDutyCycle((unsigned)(DCduty + ACduty));
-				usleep(del);
-			}
-		}
-		pwm->setDutyCycle((unsigned)DCduty);
-		exit(0);
-	}
-	if (bRangeTest == true) // If axis motion range test mode
-	{
-		cout << "Axis" << ax << " Range Test" << endl;
-		unsigned int cPos = pwm->getDutyCycle(); // Save current axis position
-		pwm->setDutyCycle(400000u);  // Set initial position as the duty cycle in microsecs in [600, 2000]
-		for (int duty = 400; duty <= 1200; duty += 100)
-		{
-			pwm->setDutyCycle(unsigned(duty * 1000));
-			usleep(sec);
-			cout << "Axis " << ax << " at duty = " << duty << " microsec" << endl;
-		}
-		del = 8000;
-		for (int duty = 1200; duty > 400; duty -= 1)
-		{
-			pwm->setDutyCycle(unsigned(duty * 1000));
-			usleep(del);
-			cout << "Axis " << ax << " at duty = " << duty << " microsec" << endl;
-		}
-		pwm->setDutyCycle(cPos);
-		exit(0);
-	}
-
-}
-#endif
-
 
 

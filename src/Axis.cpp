@@ -42,6 +42,7 @@ int Axis::Initialize(void)
 	Period = 10.0;
 	Cycles = 1;
 	Ampl = 30.0;
+	Mode = SIN;
 	// Create thread for this axis used for sine & step modes
 	pthread_create(&SineThread, NULL, Axis::thread_helper, this);
 	return 1;
@@ -78,37 +79,85 @@ void Axis::sinethread(void)
 {
 	const float PI = 3.1415927;
 	const float TWO_PI = 2.0 * PI;
-	int DCduty, ACduty, cycles;
+	int DCduty, ACduty, cycles, delay, duty;
+	unsigned cpos;
 	float ang, inc;
+	bool step;
 
 	while (1)
 	{
 		if (bTrig == true)
 		{
-			if (bufTrig == false) // If just entering sine motion
+			if ((Mode == SIN) || (Mode == COS))
 			{
-				DCduty = pwm->getDutyCycle(); // Save current axis DC position
-				cycles = Cycles;
-				ang = 0.0;
-				inc = 1.0 / (50.0 * Period);
-				bufTrig = true;
-			}
-			else
-			{
-				if (cycles > 0)
+				if (bufTrig == false) // If just entering sine motion
 				{
-					ACduty = Ampl * MicrosecPerDeg * sin(ang * TWO_PI) * 1000.0;
-					ang += inc;
-					if (ang > 1.0)
-					{
-						ang = 0.0;
-						cycles--;
-					}
-					pwm->setDutyCycle((unsigned)(DCduty + ACduty));
+					DCduty = pwm->getDutyCycle(); // Save current axis DC position
+					cycles = Cycles;
+					ang = 0.0;
+					inc = 1.0 / (50.0 * Period);
+					bufTrig = true;
 				}
 				else
 				{
-					bTrig = false;
+					if (cycles > 0)
+					{
+						if (Mode == SIN)
+						{
+							ACduty = Ampl * MicrosecPerDeg * sin(ang * TWO_PI) * 1000.0;
+						}
+						else
+						{
+							ACduty = Ampl * MicrosecPerDeg * cos(ang * TWO_PI) * 1000.0;
+						}
+						ang += inc;
+						if (ang > 1.0)
+						{
+							ang = 0.0;
+							cycles--;
+						}
+						pwm->setDutyCycle((unsigned)(DCduty + ACduty));
+					}
+					else
+					{
+						bTrig = false;
+					}
+				}
+			}
+			else // Else mode is RANGE
+			{
+				if (bufTrig == false) // If just entering range mode motion
+				{
+					delay = 50;
+					duty = 400;
+					cpos = pwm->getDutyCycle(); // Save current axis position
+					pwm->setDutyCycle(unsigned(duty * 1000));
+					bufTrig = true;
+					step = true;
+				}
+				delay--;
+				if ((duty < 1200) && (step == true))
+				{
+					if (delay == 0)
+					{
+						duty += 100;
+						pwm->setDutyCycle(unsigned(duty * 1000));
+						delay = 50;
+					}
+				}
+				else
+				{
+					if (duty >= 1200)
+					{
+						step = false;
+						duty = 1200 - 1;
+					}
+					pwm->setDutyCycle(unsigned(duty-- * 1000));
+					if (duty == 400)
+					{
+						bTrig = false;
+						pwm->setDutyCycle(cpos);
+					}
 				}
 			}
 		}
